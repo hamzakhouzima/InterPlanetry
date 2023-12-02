@@ -1,0 +1,13 @@
+package com.youcode.interplanetary;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
+
+@SpringBootTest
+class InterPlanetaryApplicationTests {
+
+    @Test
+    void contextLoads() {
+    }
+
+}
