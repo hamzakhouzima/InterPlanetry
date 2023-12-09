@@ -1,13 +1,15 @@
 package com.youcode.interplanetary.ToolKit;
 
 import io.ipfs.api.NamedStreamable;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.util.List;
 import java.util.Map;
 
 public interface FileStorage {
     // Upload file to IPFS and return CID
-    String uploadFile(NamedStreamable fileData);
+    String uploadFile(MultipartFile  file);
 
     // Download file content based on CID
     byte[] downloadFile(String cid, String downloadPath);
@@ -41,4 +43,19 @@ public interface FileStorage {
     void publishName(String name, String cid);
 
     String resolveName(String name);
+
+
+
+
+
+//    void pinFile(String cid);
+//
+//    // Unpin a previously pinned file or content identified by its CID
+//    void unpinFile(String cid);
+//
+//    // Check if a file or content identified by its CID is pinned
+//    boolean isPinned(String cid);
+//
+//    // Get a list of all pinned content in the IPFS node
+//    List<String> getPinnedContent();
 }

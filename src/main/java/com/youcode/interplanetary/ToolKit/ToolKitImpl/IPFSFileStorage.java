@@ -1,54 +1,91 @@
 package com.youcode.interplanetary.ToolKit.ToolKitImpl;
 
+import com.youcode.interplanetary.ToolKit.Entity.MetaData;
 import com.youcode.interplanetary.ToolKit.FileStorage;
-import com.youcode.interplanetary.config.IPFSConfig;
+import com.youcode.interplanetary.ToolKit.MetaRepository;
 import io.ipfs.api.IPFS;
 import io.ipfs.api.MerkleNode;
 import io.ipfs.api.NamedStreamable;
 import io.ipfs.multihash.Multihash;
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 
+
+@Getter
+@Setter
+
+@Service
 public class IPFSFileStorage implements FileStorage {
 
 //    @Autowired
     private final IPFS ipfs;
+    private FileStorage fileStorage;
+
+    @Autowired
+    private final MetaRepository dataRepository;
+
+
+//    @Autowired
+//    public IPFSFileStorage(FileStorage FileStorage) {
+//        this.FileStorage = FileStorage;
+////        this.ipfs = new IPFS("/ip4/127.0.0.1/tcp/5001");
+//    }
+
+    private String cid;
+
+
 
 //    public IPFSFileStorage(IPFSConfig ipfs) {
 //        this.ipfs = ipfs;
 //    }
 
-        public IPFSFileStorage() {
-        this.ipfs = new IPFS("/ip4/127.0.0.1/tcp/5001"); // Initialize IPFS node
+        public IPFSFileStorage(MetaRepository dataRepository) {
+            this.dataRepository = dataRepository;
+            this.ipfs = new IPFS("/ip4/127.0.0.1/tcp/5001"); // Initialize IPFS node
     }
 
     //this method's parameter should be changed to byte[] and use ipfs.dag.put()
     @Override
-    public String uploadFile(NamedStreamable fileData) {
+    public String uploadFile(MultipartFile file) {
+//            MetaData metaData = new MetaData();
+
         try {
-            MerkleNode cid = (MerkleNode) ipfs.add(fileData);
-            return cid.hash.toBase58();
-        } catch (IOException e) {
-            e.printStackTrace();
-            throw new RuntimeException("Upload failed due to IO issues", e);
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new RuntimeException("Unexpected error during upload", e);
+            InputStream inputStream = new ByteArrayInputStream(file.getBytes());
+//            IPFS ipfs = ipfsConfig.ipfs;
+
+            NamedStreamable.InputStreamWrapper is = new NamedStreamable.InputStreamWrapper(inputStream);
+//                                        /\
+            //  ||                    //  ||
+            MerkleNode response = ipfs.add(is).get(0);
+
+            cid = response.hash.toBase58();
+//          MetaData  metaData = MetaData.builder()
+//                  .User_Cid(cid)
+//                  .build();
+//
+//            fileStorage.storeMetaData(metaData);
+
+            return cid;
+        } catch (IOException ex) {
+            throw new RuntimeException("Error while communicating with the IPFS node", ex);
         }
     }
-
 
 
     @Override
     public byte[] downloadFile(String cid, String downloadPath) {
         try {
-            // Convert the CID to Multihash
+            // convert the CID to Multihash
             Multihash filePointer = Multihash.fromBase58(cid);
 
             byte[] content = ipfs.cat(filePointer);
@@ -67,15 +104,17 @@ public class IPFSFileStorage implements FileStorage {
         try {
             Multihash filePointer = Multihash.fromBase58(cid);
             ipfs.object.stat(filePointer);
+            System.out.println("File is available on the IPFS network");
             return true;
         }catch (IOException e){
             e.printStackTrace();
+            throw new RuntimeException("Error while communicating with the IPFS node", e);
         }
-        return false;
     }
 
     @Override
     public boolean reseedFile(String cid) {
+
         return false;
     }
 
