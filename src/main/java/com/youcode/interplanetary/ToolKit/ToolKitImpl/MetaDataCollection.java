@@ -6,13 +6,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Date;
+
 @Service
 public class MetaDataCollection  {
     @Autowired
     private  MetaRepository metaRepository;
 
     @Autowired
-    private IPFSFileStorage ipfsFileStorage;
+    private FileStorageServiceImpl ipfsFileStorage;
+    Date date = new Date(); // Get the current date/time
 
 
 //    private MetaRepository dataRepository;
@@ -20,19 +23,20 @@ public class MetaDataCollection  {
 
 //    String CID = Ipfs.getCid();
 
-public String storeMetaData(MultipartFile file) {
-    try{
-        String CID = ipfsFileStorage.uploadFile(file);
-            MetaData metaData = MetaData.builder()
-                    .userCid(CID)
-                    .build();
-        metaRepository.save(metaData);
-        return CID;
-    }catch(Exception e){
-        throw new RuntimeException("Error while communicating with the IPFS node", e);
-    }
+        public String storeMetaData(MultipartFile file) {
+            try{
+                String CID = ipfsFileStorage.uploadFile(file);
+                    MetaData metaData = MetaData.builder()
+                            .userCid(CID)
+                            .date(date)
+                            .build();
+                metaRepository.save(metaData);
+                return CID;
+            }catch(Exception e){
+                throw new RuntimeException("Error while communicating with the IPFS node", e);
+            }
 
-}
+        }
 
 
 }

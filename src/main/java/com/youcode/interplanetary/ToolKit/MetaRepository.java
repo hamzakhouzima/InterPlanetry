@@ -8,4 +8,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface MetaRepository extends JpaRepository<MetaData, String> {
 
+    MetaData findByUserCid(String userCid);
+
 }

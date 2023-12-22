@@ -1,7 +1,7 @@
 package com.youcode.interplanetary.ToolKit.ToolKitImpl;
 
 import com.youcode.interplanetary.ToolKit.Entity.MetaData;
-import com.youcode.interplanetary.ToolKit.FileStorage;
+import com.youcode.interplanetary.ToolKit.FileStorageService;
 import com.youcode.interplanetary.ToolKit.MetaRepository;
 import io.ipfs.api.IPFS;
 import io.ipfs.api.MerkleNode;
@@ -17,6 +17,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -25,31 +26,22 @@ import java.util.Map;
 @Setter
 
 @Service
-public class IPFSFileStorage implements FileStorage {
+public class FileStorageServiceImpl implements FileStorageService {
 
 //    @Autowired
     private final IPFS ipfs;
-    private FileStorage fileStorage;
+    private FileStorageService fileStorage;
 
     @Autowired
     private final MetaRepository dataRepository;
 
 
-//    @Autowired
-//    public IPFSFileStorage(FileStorage FileStorage) {
-//        this.FileStorage = FileStorage;
-////        this.ipfs = new IPFS("/ip4/127.0.0.1/tcp/5001");
-//    }
+
 
     private String cid;
 
-
-
-//    public IPFSFileStorage(IPFSConfig ipfs) {
-//        this.ipfs = ipfs;
-//    }
-
-        public IPFSFileStorage(MetaRepository dataRepository) {
+    
+    public FileStorageServiceImpl(MetaRepository dataRepository) {
             this.dataRepository = dataRepository;
             this.ipfs = new IPFS("/ip4/127.0.0.1/tcp/5001"); // Initialize IPFS node
     }
@@ -57,11 +49,9 @@ public class IPFSFileStorage implements FileStorage {
     //this method's parameter should be changed to byte[] and use ipfs.dag.put()
     @Override
     public String uploadFile(MultipartFile file) {
-//            MetaData metaData = new MetaData();
 
         try {
             InputStream inputStream = new ByteArrayInputStream(file.getBytes());
-//            IPFS ipfs = ipfsConfig.ipfs;
 
             NamedStreamable.InputStreamWrapper is = new NamedStreamable.InputStreamWrapper(inputStream);
 //                                        /\
@@ -69,12 +59,6 @@ public class IPFSFileStorage implements FileStorage {
             MerkleNode response = ipfs.add(is).get(0);
 
             cid = response.hash.toBase58();
-//          MetaData  metaData = MetaData.builder()
-//                  .User_Cid(cid)
-//                  .build();
-//
-//            fileStorage.storeMetaData(metaData);
-
             return cid;
         } catch (IOException ex) {
             throw new RuntimeException("Error while communicating with the IPFS node", ex);
@@ -89,7 +73,6 @@ public class IPFSFileStorage implements FileStorage {
             Multihash filePointer = Multihash.fromBase58(cid);
 
             byte[] content = ipfs.cat(filePointer);
-
             Path path = Paths.get(downloadPath);
             Files.write(path, content);
             System.out.println("File downloaded successfully to: " + downloadPath);
@@ -120,7 +103,17 @@ public class IPFSFileStorage implements FileStorage {
 
     @Override
     public Map<String, Object> getFileMetadata(String cid) {
-        return null;
+        try {
+            MetaData MD = dataRepository.findByUserCid(cid);
+            Map<String, Object> metadata = new HashMap<>();
+            metadata.put("fileName", MD.getFileName());
+            metadata.put("fileSize", MD.getFileSize());
+            metadata.put("userCid", MD.getUserCid());
+            metadata.put("date", MD.getDate());
+            return metadata;
+        } catch (Exception e) {
+            throw new RuntimeException("Error while communicating with the IPFS node Caused =>" + e);
+        }
     }
 
     @Override
@@ -130,6 +123,7 @@ public class IPFSFileStorage implements FileStorage {
 
     @Override
     public boolean pinFile(String cid) {
+
         return false;
     }
 
@@ -147,4 +141,14 @@ public class IPFSFileStorage implements FileStorage {
     public String resolveName(String name) {
         return null;
     }
+    /////////////:tool methods/
+    private String getFileExtension(String fileName) {
+        int dotIndex = fileName.lastIndexOf(".");
+        if (dotIndex != -1) {
+            return fileName.substring(dotIndex);
+        }
+        return "";
+    }
+
+
 }

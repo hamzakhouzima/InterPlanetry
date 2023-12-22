@@ -1,13 +1,11 @@
 package com.youcode.interplanetary.ToolKit;
 
-import io.ipfs.api.NamedStreamable;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
 import java.util.List;
 import java.util.Map;
 
-public interface FileStorage {
+public interface FileStorageService {
     // Upload file to IPFS and return CID
     String uploadFile(MultipartFile  file);
 

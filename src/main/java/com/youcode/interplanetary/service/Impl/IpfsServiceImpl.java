@@ -69,9 +69,3 @@ public class IpfsServiceImpl implements IPFSService {
         }
     }
 }
-/**
- * Loads a file from IPFS based on the given hash.
- *
- * @param  hash	The hash of the file to be loaded from IPFS.
- * @return     	The byte array representation of the file content.
- */
