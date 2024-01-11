@@ -1,4 +1,4 @@
-package com.youcode.interplanetary.service;
+package com.youcode.interplanetary.NetworkStorage.service;
 import org.springframework.web.multipart.MultipartFile;
 
 public interface IPFSService {

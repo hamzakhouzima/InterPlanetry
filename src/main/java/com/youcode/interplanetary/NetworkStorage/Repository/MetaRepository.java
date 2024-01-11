@@ -1,8 +1,7 @@
-package com.youcode.interplanetary.ToolKit;
+package com.youcode.interplanetary.NetworkStorage.Repository;
 
-import com.youcode.interplanetary.ToolKit.Entity.MetaData;
+import com.youcode.interplanetary.NetworkStorage.Entity.MetaData;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Repository;
 
 @Repository

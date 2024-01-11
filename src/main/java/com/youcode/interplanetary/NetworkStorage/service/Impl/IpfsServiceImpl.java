@@ -1,7 +1,7 @@
-package com.youcode.interplanetary.service.Impl;
+package com.youcode.interplanetary.NetworkStorage.service.Impl;
 
 import com.youcode.interplanetary.config.IPFSConfig;
-import com.youcode.interplanetary.service.IPFSService;
+import com.youcode.interplanetary.NetworkStorage.service.IPFSService;
 import io.ipfs.api.IPFS;
 import io.ipfs.api.MerkleNode;
 import io.ipfs.api.NamedStreamable;

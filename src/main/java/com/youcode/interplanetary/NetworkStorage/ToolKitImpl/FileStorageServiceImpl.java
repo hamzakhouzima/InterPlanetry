@@ -1,9 +1,9 @@
-package com.youcode.interplanetary.ToolKit.ToolKitImpl;
+package com.youcode.interplanetary.NetworkStorage.ToolKitImpl;
 
-import com.youcode.interplanetary.ToolKit.Entity.MetaData;
-import com.youcode.interplanetary.ToolKit.FileStorageService;
-import com.youcode.interplanetary.ToolKit.MetaRepository;
-import io.ipfs.api.IPFS;
+import com.youcode.interplanetary.NetworkStorage.Entity.MetaData;
+import com.youcode.interplanetary.NetworkStorage.FileStorageService;
+import com.youcode.interplanetary.NetworkStorage.Repository.MetaRepository;
+import com.youcode.interplanetary.config.IPFSConfig;
 import io.ipfs.api.MerkleNode;
 import io.ipfs.api.NamedStreamable;
 import io.ipfs.multihash.Multihash;
@@ -24,26 +24,23 @@ import java.util.Map;
 
 @Getter
 @Setter
-
 @Service
 public class FileStorageServiceImpl implements FileStorageService {
 
-//    @Autowired
-    private final IPFS ipfs;
+    @Autowired
+    private  IPFSConfig ipfsConfig;
+
     private FileStorageService fileStorage;
 
     @Autowired
     private final MetaRepository dataRepository;
-
-
-
 
     private String cid;
 
     
     public FileStorageServiceImpl(MetaRepository dataRepository) {
             this.dataRepository = dataRepository;
-            this.ipfs = new IPFS("/ip4/127.0.0.1/tcp/5001"); // Initialize IPFS node
+//            this.ipfs = new IPFS("/ip4/127.0.0.1/tcp/5001"); // Initialize IPFS node
     }
 
     //this method's parameter should be changed to byte[] and use ipfs.dag.put()
@@ -56,7 +53,7 @@ public class FileStorageServiceImpl implements FileStorageService {
             NamedStreamable.InputStreamWrapper is = new NamedStreamable.InputStreamWrapper(inputStream);
 //                                        /\
             //  ||                    //  ||
-            MerkleNode response = ipfs.add(is).get(0);
+            MerkleNode response = ipfsConfig.ipfs.add(is).get(0);
 
             cid = response.hash.toBase58();
             return cid;
@@ -72,7 +69,7 @@ public class FileStorageServiceImpl implements FileStorageService {
             // convert the CID to Multihash
             Multihash filePointer = Multihash.fromBase58(cid);
 
-            byte[] content = ipfs.cat(filePointer);
+            byte[] content = ipfsConfig.ipfs.cat(filePointer);
             Path path = Paths.get(downloadPath);
             Files.write(path, content);
             System.out.println("File downloaded successfully to: " + downloadPath);
@@ -86,7 +83,7 @@ public class FileStorageServiceImpl implements FileStorageService {
     public boolean isAvailable(String cid) {
         try {
             Multihash filePointer = Multihash.fromBase58(cid);
-            ipfs.object.stat(filePointer);
+            ipfsConfig.ipfs.object.stat(filePointer);
             System.out.println("File is available on the IPFS network");
             return true;
         }catch (IOException e){

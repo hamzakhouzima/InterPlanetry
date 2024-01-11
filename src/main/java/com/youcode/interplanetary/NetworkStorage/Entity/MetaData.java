@@ -1,4 +1,4 @@
-package com.youcode.interplanetary.ToolKit.Entity;
+package com.youcode.interplanetary.NetworkStorage.Entity;
 
 import jakarta.persistence.*;
 import lombok.*;

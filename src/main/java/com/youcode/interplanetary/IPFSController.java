@@ -1,9 +1,8 @@
 package com.youcode.interplanetary;
 
 
-import com.youcode.interplanetary.ToolKit.Entity.MetaData;
-import com.youcode.interplanetary.ToolKit.ToolKitImpl.FileStorageServiceImpl;
-import com.youcode.interplanetary.ToolKit.ToolKitImpl.MetaDataCollection;
+import com.youcode.interplanetary.NetworkStorage.ToolKitImpl.FileStorageServiceImpl;
+import com.youcode.interplanetary.NetworkStorage.ToolKitImpl.MetaDataCollection;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
