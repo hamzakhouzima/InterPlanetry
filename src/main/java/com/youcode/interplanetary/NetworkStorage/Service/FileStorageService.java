@@ -1,4 +1,4 @@
-package com.youcode.interplanetary.NetworkStorage;
+package com.youcode.interplanetary.NetworkStorage.Service;
 
 import org.springframework.web.multipart.MultipartFile;
 
@@ -8,6 +8,8 @@ import java.util.Map;
 public interface FileStorageService {
     // Upload file to IPFS and return CID
     String uploadFile(MultipartFile  file);
+
+    String UpdateFile(MultipartFile file);
 
     // Download file content based on CID
     byte[] downloadFile(String cid, String downloadPath);
@@ -23,6 +25,8 @@ public interface FileStorageService {
 
     // Get metadata or information about a file based on CID
     Map<String, Object> getFileMetadata(String cid);
+
+
 
 
     // List files or content stored in IPFS directory

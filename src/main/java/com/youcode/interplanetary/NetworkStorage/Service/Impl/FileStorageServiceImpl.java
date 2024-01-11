@@ -1,14 +1,15 @@
-package com.youcode.interplanetary.NetworkStorage.ToolKitImpl;
+package com.youcode.interplanetary.NetworkStorage.Service.Impl;
 
 import com.youcode.interplanetary.NetworkStorage.Entity.MetaData;
-import com.youcode.interplanetary.NetworkStorage.FileStorageService;
 import com.youcode.interplanetary.NetworkStorage.Repository.MetaRepository;
+import com.youcode.interplanetary.NetworkStorage.Service.FileStorageService;
 import com.youcode.interplanetary.config.IPFSConfig;
 import io.ipfs.api.MerkleNode;
 import io.ipfs.api.NamedStreamable;
 import io.ipfs.multihash.Multihash;
 import lombok.Getter;
 import lombok.Setter;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -20,6 +21,7 @@ import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 
 
 @Getter
@@ -40,10 +42,12 @@ public class FileStorageServiceImpl implements FileStorageService {
     
     public FileStorageServiceImpl(MetaRepository dataRepository) {
             this.dataRepository = dataRepository;
-//            this.ipfs = new IPFS("/ip4/127.0.0.1/tcp/5001"); // Initialize IPFS node
     }
 
     //this method's parameter should be changed to byte[] and use ipfs.dag.put()
+
+//    private static final Logger logger = (Logger) LoggerFactory.getLogger(FileStorageServiceImpl.class);
+
     @Override
     public String uploadFile(MultipartFile file) {
 
@@ -60,6 +64,13 @@ public class FileStorageServiceImpl implements FileStorageService {
         } catch (IOException ex) {
             throw new RuntimeException("Error while communicating with the IPFS node", ex);
         }
+    }
+
+    @Override
+    public String UpdateFile(MultipartFile file) {
+       String NewCID = uploadFile(file);
+        dataRepository.updateByUserCid(NewCID);
+        return NewCID;
     }
 
 

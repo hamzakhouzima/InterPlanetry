@@ -9,4 +9,6 @@ public interface MetaRepository extends JpaRepository<MetaData, String> {
 
     MetaData findByUserCid(String userCid);
 
+    void updateByUserCid(String userCid);
+
 }

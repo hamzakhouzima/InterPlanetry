@@ -1,8 +1,8 @@
-package com.youcode.interplanetary;
+package com.youcode.interplanetary.NetworkStorage.Controller;
 
 
-import com.youcode.interplanetary.NetworkStorage.ToolKitImpl.FileStorageServiceImpl;
-import com.youcode.interplanetary.NetworkStorage.ToolKitImpl.MetaDataCollection;
+import com.youcode.interplanetary.NetworkStorage.Service.Impl.FileStorageServiceImpl;
+import com.youcode.interplanetary.NetworkStorage.Service.MetaDataCollection;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -32,17 +32,11 @@ private FileStorageServiceImpl fileStorageServiceImpl;
 
 
 
-//    @Autowired
-//    private IpfsServiceImpl ipfsService;
-
-//    @GetMapping(value = "")
-//    public String saveText(@RequestParam("filepath") String filepath) {
-//        return ipfsService.uploadFile(filepath);
-//    }
 
     @PostMapping(value="/upload")
     public ResponseEntity<String> uploadFile(@RequestParam("file") MultipartFile file) {
         try {
+            fileStorageServiceImpl.uploadFile(file);
             String cid = ipfsService.storeMetaData(file);
             return ResponseEntity.ok("File uploaded successfully. CID: " + cid);
         }  catch (Exception e) {
