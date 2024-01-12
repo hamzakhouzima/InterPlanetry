@@ -3,6 +3,7 @@ package com.youcode.interplanetary.NetworkStorage.Service.Impl;
 import com.youcode.interplanetary.NetworkStorage.Entity.MetaData;
 import com.youcode.interplanetary.NetworkStorage.Repository.MetaRepository;
 import com.youcode.interplanetary.NetworkStorage.Service.FileStorageService;
+import com.youcode.interplanetary.NetworkStorage.Service.MetaDataService;
 import com.youcode.interplanetary.config.IPFSConfig;
 import io.ipfs.api.MerkleNode;
 import io.ipfs.api.NamedStreamable;
@@ -11,6 +12,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -35,14 +37,21 @@ public class FileStorageServiceImpl implements FileStorageService {
     private FileStorageService fileStorage;
 
     @Autowired
-    private final MetaRepository dataRepository;
+    private  MetaRepository dataRepository;
 
+
+
+    //##########################################//
+    @Autowired
+    @Lazy
+    private MetaDataService mds;
+//##########################################//
     private String cid;
 
     
-    public FileStorageServiceImpl(MetaRepository dataRepository) {
-            this.dataRepository = dataRepository;
-    }
+//    public FileStorageServiceImpl(MetaRepository dataRepository) {
+//            this.dataRepository = dataRepository;
+//    }
 
     //this method's parameter should be changed to byte[] and use ipfs.dag.put()
 
@@ -67,9 +76,9 @@ public class FileStorageServiceImpl implements FileStorageService {
     }
 
     @Override
-    public String UpdateFile(MultipartFile file) {
-       String NewCID = uploadFile(file);
-        dataRepository.updateByUserCid(NewCID);
+    public String UpdateFile(MultipartFile file , String ID_num) { //ToDo : this method should be updated , it's not working
+        String NewCID = uploadFile(file);
+        mds.updateMetaData(file , NewCID);
         return NewCID;
     }
 

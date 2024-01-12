@@ -9,7 +9,7 @@ public interface FileStorageService {
     // Upload file to IPFS and return CID
     String uploadFile(MultipartFile  file);
 
-    String UpdateFile(MultipartFile file);
+    String UpdateFile(MultipartFile file ,  String ID_number);
 
     // Download file content based on CID
     byte[] downloadFile(String cid, String downloadPath);

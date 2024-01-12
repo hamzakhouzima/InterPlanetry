@@ -33,5 +33,15 @@ public class MetaData {
     @Column(name = "Date")
     private Date date;
 
+    @Column(name="first_name")
+    private String firstName;
+
+    @Column(name="last_name")
+    private String lastName;
+
+    @Column(name="ID_number")
+    private String IdNumber;
+
+
     // Add getters, setters, and any necessary methods
 }

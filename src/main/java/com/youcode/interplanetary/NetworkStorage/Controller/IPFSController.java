@@ -1,8 +1,10 @@
 package com.youcode.interplanetary.NetworkStorage.Controller;
 
 
+import com.youcode.interplanetary.NetworkStorage.Service.FileStorageService;
 import com.youcode.interplanetary.NetworkStorage.Service.Impl.FileStorageServiceImpl;
-import com.youcode.interplanetary.NetworkStorage.Service.MetaDataCollection;
+import com.youcode.interplanetary.NetworkStorage.Service.Impl.MetaDataServiceImpl;
+import com.youcode.interplanetary.NetworkStorage.Service.MetaDataService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -24,10 +26,10 @@ public class IPFSController {
 //    private FileStorage ipfsService;
 //
 @Autowired
-private MetaDataCollection ipfsService;
+private MetaDataService metaDataService;
 
 @Autowired
-private FileStorageServiceImpl fileStorageServiceImpl;
+private FileStorageService fileStorageService;
 
 
 
@@ -36,11 +38,21 @@ private FileStorageServiceImpl fileStorageServiceImpl;
     @PostMapping(value="/upload")
     public ResponseEntity<String> uploadFile(@RequestParam("file") MultipartFile file) {
         try {
-            fileStorageServiceImpl.uploadFile(file);
-            String cid = ipfsService.storeMetaData(file);
+            fileStorageService.uploadFile(file);
+            String cid = metaDataService.storeMetaData(file);
             return ResponseEntity.ok("File uploaded successfully. CID: " + cid);
         }  catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error uploading file: " + e.getMessage());
+        }
+    }
+    @PutMapping(value="/update")
+    public ResponseEntity<String> updateFile(@RequestParam("fileUpdate") MultipartFile file , @RequestParam("ID_Num") String idNum) {
+        try {
+            fileStorageService.uploadFile(file);
+            String cid = fileStorageService.UpdateFile(file ,idNum );
+            return ResponseEntity.ok("File updated successfully. CID: " + cid);
+        }  catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error updating file: " + e.getMessage());
         }
     }
 
@@ -55,7 +67,7 @@ private FileStorageServiceImpl fileStorageServiceImpl;
 //        Path filePath = Paths.get("C:", "Users", "Youcode", "Downloads", hash+".png");
         String fileExtension = getFileExtension(hash);
         Path filePath = Paths.get("C:", "Users", "Youcode", "Downloads", hash + fileExtension);
-        byte[] bytes = fileStorageServiceImpl.downloadFile(hash, filePath.toString());
+        byte[] bytes = fileStorageService.downloadFile(hash, filePath.toString());
         return ResponseEntity.status(HttpStatus.OK).headers(headers).body(bytes);
 
     }
@@ -64,7 +76,7 @@ private FileStorageServiceImpl fileStorageServiceImpl;
     @GetMapping(value = "/isAvailable/{hash}")
     public ResponseEntity<String> isAvailable(@PathVariable("hash") String hash) throws SocketTimeoutException {
         try {
-            boolean isAvailable = fileStorageServiceImpl.isAvailable(hash);
+            boolean isAvailable = fileStorageService.isAvailable(hash);
             if (isAvailable) {
                 return ResponseEntity.ok("File is available");
             } else {
@@ -80,7 +92,7 @@ private FileStorageServiceImpl fileStorageServiceImpl;
     @GetMapping(value = "/metaData/{hash}")
     public ResponseEntity<String> getMetaData(@PathVariable("hash") String hash) {
         try {
-            Map<String, Object> metaData = fileStorageServiceImpl.getFileMetadata(hash);
+            Map<String, Object> metaData = fileStorageService.getFileMetadata(hash);
             StringBuilder response = new StringBuilder();
             metaData.forEach((key, value) -> response.append(key).append(": ").append(value).append("\n"));
             return ResponseEntity.ok(response.toString());
