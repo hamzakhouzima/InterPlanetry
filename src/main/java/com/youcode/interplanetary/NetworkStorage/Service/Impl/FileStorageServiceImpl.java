@@ -1,5 +1,6 @@
 package com.youcode.interplanetary.NetworkStorage.Service.Impl;
 
+import com.youcode.interplanetary.GlobalException.IpfsFileNotFound;
 import com.youcode.interplanetary.NetworkStorage.Entity.MetaData;
 import com.youcode.interplanetary.NetworkStorage.Repository.MetaRepository;
 import com.youcode.interplanetary.NetworkStorage.Service.FileStorageService;
@@ -41,7 +42,7 @@ public class FileStorageServiceImpl implements FileStorageService {
 
 
 
-    //##########################################//
+    //################DUBUG#############################//
     @Autowired
     @Lazy
     private MetaDataService mds;
@@ -76,7 +77,7 @@ public class FileStorageServiceImpl implements FileStorageService {
     }
 
     @Override
-    public String UpdateFile(MultipartFile file , String ID_num) { //ToDo : this method should be updated , it's not working
+    public String UpdateFile(MultipartFile file , String ID_num) { //ToDo : we should add exception handling
         String NewCID = uploadFile(file);
         mds.updateMetaData(file , NewCID);
         return NewCID;
@@ -93,7 +94,7 @@ public class FileStorageServiceImpl implements FileStorageService {
             Path path = Paths.get(downloadPath);
             Files.write(path, content);
             System.out.println("File downloaded successfully to: " + downloadPath);
-        } catch (IOException e) {
+        } catch (IpfsFileNotFound | IOException e) {
             e.printStackTrace();
         }
         return new byte[0];
