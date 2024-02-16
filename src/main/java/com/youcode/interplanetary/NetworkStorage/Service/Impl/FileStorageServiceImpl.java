@@ -9,7 +9,9 @@ import com.youcode.interplanetary.config.IPFSConfig;
 import io.ipfs.api.MerkleNode;
 import io.ipfs.api.NamedStreamable;
 import io.ipfs.multihash.Multihash;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,13 +26,16 @@ import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.lang.String;
 import java.util.logging.Logger;
 
 
 @Getter
 @Setter
+@RequiredArgsConstructor
 @Service
 public class FileStorageServiceImpl implements FileStorageService {
+    private String cid;
 
     @Autowired
     private  IPFSConfig ipfsConfig;
@@ -47,7 +52,8 @@ public class FileStorageServiceImpl implements FileStorageService {
     @Lazy
     private MetaDataService mds;
 //##########################################//
-    private String cid;
+
+
 
     
 //    public FileStorageServiceImpl(MetaRepository dataRepository) {
@@ -133,6 +139,7 @@ public class FileStorageServiceImpl implements FileStorageService {
             throw new RuntimeException("Error while communicating with the IPFS node Caused =>" + e);
         }
     }
+
 
     @Override
     public List<String> listFilesInDirectory(String cid) {

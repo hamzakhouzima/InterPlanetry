@@ -4,3 +4,16 @@ in this service we will implement several functionalities like , the ability of 
 
 to implement this AI model , i have an idea to implement the Observer design pattern so the doctor could be notified when a patient
 could have a potential risk of being sick with something
+========================================================
+Traditional Database:
+
+Patient demographics and contact details
+    Medication lists and allergies
+    Appointment history and basic diagnoses
+    Real-time monitoring data and active treatment plans (depending on access frequency)
+    References (e.g., IPFS CIDs) for data stored in IPFS
+    Anonymized data for external sharing (if needed)
+IPFS:
+    Medical records (full reports, notes)
+    Imaging scans and other large files
+    Detailed clinical data

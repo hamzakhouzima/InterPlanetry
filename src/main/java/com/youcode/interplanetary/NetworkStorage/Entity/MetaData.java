@@ -43,5 +43,4 @@ public class MetaData {
     private String IdNumber;
 
 
-    // Add getters, setters, and any necessary methods
 }
