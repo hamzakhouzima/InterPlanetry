@@ -5,6 +5,8 @@ import com.youcode.interplanetary.NetworkStorage.Service.FileStorageService;
 import com.youcode.interplanetary.NetworkStorage.Service.Impl.FileStorageServiceImpl;
 import com.youcode.interplanetary.NetworkStorage.Service.Impl.MetaDataServiceImpl;
 import com.youcode.interplanetary.NetworkStorage.Service.MetaDataService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -31,6 +33,7 @@ private MetaDataService metaDataService;
 @Autowired
 private FileStorageService fileStorageService;
 
+    private static final Logger logger = LoggerFactory.getLogger(IPFSController.class);
 
 
 
@@ -40,8 +43,10 @@ private FileStorageService fileStorageService;
         try {
             fileStorageService.uploadFile(file);
             String cid = metaDataService.storeMetaData(file);
+            logger.info("File uploaded successfully. CID: {}", cid);
             return ResponseEntity.ok("File uploaded successfully. CID: " + cid);
         }  catch (Exception e) {
+            logger.error("Error uploading file", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error uploading file: " + e.getMessage());
         }
     }
