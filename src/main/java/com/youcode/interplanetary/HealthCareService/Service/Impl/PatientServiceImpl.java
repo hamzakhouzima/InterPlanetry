@@ -67,7 +67,7 @@ public class PatientServiceImpl implements PatientService {
             String patientJson = convertPatientDtoToJson(patientDto);
             headers.setContentType(MediaType.APPLICATION_JSON);
             HttpEntity<String> requestEntity = new HttpEntity<>(patientJson, headers);
-            ResponseEntity<String> responseEntity = restTemplate.exchange(IpfsUrl, HttpMethod.POST, requestEntity, String.class);
+            ResponseEntity<String> responseEntity = restTemplate.exchange(IpfsUrl + "upload", HttpMethod.POST, requestEntity, String.class);
             logger.info("Uploaded patient data successfully. Response: {}", responseEntity.getBody());
 //            person.setCity(patientDto.getCity());
             person.setAge(patientDto.getDemographics().getAge());
@@ -111,6 +111,15 @@ public class PatientServiceImpl implements PatientService {
         }
     }
 
+    @Override
+    public ResponseEntity<String> getPatientByEmail(String email) throws Exception {
+        Person person = personRepository.findPersonByEmail(email);
+        if (person != null) {
+           return getPatient(person.getHealthDataCID());
+        }else{
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Patient not found");
+        }
+    }
 
 
     private String extractCidFromResponse(ResponseEntity<String> responseEntity) {
