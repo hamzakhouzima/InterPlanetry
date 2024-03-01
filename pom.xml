@@ -50,6 +50,31 @@
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
 
+
+
+
+        <dependency>
+            <groupId>javax.validation</groupId>
+            <artifactId>validation-api</artifactId>
+            <version>2.0.1.Final</version>
+        </dependency>
+        <dependency>
+            <groupId>org.hibernate.validator</groupId>
+            <artifactId>hibernate-validator</artifactId>
+            <version>6.2.0.Final</version> <!-- Use the appropriate version -->
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/org.modelmapper/modelmapper -->
+        <dependency>
+            <groupId>org.modelmapper</groupId>
+            <artifactId>modelmapper</artifactId>
+            <version>3.2.0</version>
+        </dependency>
+
+
+
+
+
+
             <dependency>
                 <groupId>com.github.ipfs</groupId>
                 <artifactId>java-ipfs-http-client</artifactId>

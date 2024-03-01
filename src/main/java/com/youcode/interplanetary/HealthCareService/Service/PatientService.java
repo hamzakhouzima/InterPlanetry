@@ -1,12 +1,12 @@
 package com.youcode.interplanetary.HealthCareService.Service;
 
-import com.youcode.interplanetary.HealthCareService.Entity.PersonDetails.Person;
+import com.youcode.interplanetary.Dto.PatientDto;
 import org.springframework.http.ResponseEntity;
 
 public interface PatientService {
 
 
-    ResponseEntity<String> savePatient(Person personObject) throws Exception ;
+    ResponseEntity<String> savePatient(PatientDto personObject) throws Exception ;
 
 
 

@@ -1,7 +1,7 @@
 package com.youcode.interplanetary.HealthCareService.Controller;
 
 
-import com.youcode.interplanetary.HealthCareService.Entity.PersonDetails.Person;
+import com.youcode.interplanetary.Dto.PatientDto;
 import com.youcode.interplanetary.HealthCareService.Service.PatientService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -17,7 +17,7 @@ public class PatientController {
 
 
     @PostMapping(value = "/AddPatient")
-    public ResponseEntity<String> AddPatient(@RequestBody Person patient) throws Exception {
+    public ResponseEntity<String> AddPatient(@RequestBody PatientDto patient) throws Exception {
 
         try{
             patientService.savePatient(patient);

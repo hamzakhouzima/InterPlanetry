@@ -1,5 +1,6 @@
 in this service we will implement several functionalities like , the ability of the doctor to insert the patient information
-, sort them by age , name , city finally an AI model to fetch the people that have such a decease based on the symptoms that have
+, sort them by age , name , city .
+ An AI model to fetch the people that have such a decease based on the symptoms that have
 (diabetes , heart issues , flue , Covid , cancer "maybe" )
 
 to implement this AI model , i have an idea to implement the Observer design pattern so the doctor could be notified when a patient
