@@ -15,14 +15,19 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 
 
 @Service
@@ -30,6 +35,8 @@ public class PatientServiceImpl implements PatientService {
 
 
     private final RestTemplate restTemplate;
+
+    private final Map<String, String> patientCache = new ConcurrentHashMap<>();
 
     private final FormatConverter fc;
    private final HttpHeaders headers = new HttpHeaders();
@@ -87,39 +94,111 @@ public class PatientServiceImpl implements PatientService {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error uploading patient data: " + e.getMessage());
         }
     }
-
     @Override
+    // Define a ConcurrentHashMap to store cached patient data
+//    public ResponseEntity<InputStreamResource> getPatient(String id) throws Exception {
+//        Logger logger = LoggerFactory.getLogger(this.getClass());
+//
+//        try {
+//            // Check if the patient data is already cached
+//            String cachedPatientData = patientCache.get(id);
+//            if (cachedPatientData != null) {
+//                logger.info("Retrieved patient data from cache for ID: {}", id);
+//                InputStream inputStream = new ByteArrayInputStream(cachedPatientData.getBytes());
+//                return ResponseEntity.ok()
+//                        .contentLength(cachedPatientData.length())
+//                        .contentType(MediaType.APPLICATION_JSON)
+//                        .body(new InputStreamResource(inputStream));
+//            }
+//
+//            // Make GET request to IPFS endpoint
+//            ResponseEntity<byte[]> responseEntity = restTemplate.exchange(IpfsUrl + "file/" + id, HttpMethod.GET, null, byte[].class);
+//            byte[] patientData = responseEntity.getBody();
+//
+//            // Cache the patient data
+//            String patientDataString = new String(patientData);
+//            patientCache.put(id, patientDataString);
+//            logger.info("Downloaded patient data successfully for ID: {}", id);
+//
+//            return ResponseEntity.ok()
+//                    .contentLength(patientData.length)
+//                    .contentType(MediaType.APPLICATION_JSON)
+//                    .body(new InputStreamResource(new ByteArrayInputStream(patientData)));
+//        } catch (RestClientException e) {
+//            logger.error("Error downloading patient data from IPFS: {}", e.getMessage(), e);
+//            InputStream emptyInputStream = new ByteArrayInputStream(new byte[0]);
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+//                    .contentType(MediaType.APPLICATION_JSON)
+//                    .body(new InputStreamResource(emptyInputStream));
+//        }
+//    }
     public ResponseEntity<String> getPatient(String id) throws Exception {
         Logger logger = LoggerFactory.getLogger(this.getClass());
 
         try {
+            // Check if the patient data is already cached
+            String cachedPatientData = patientCache.get(id);
+            if (cachedPatientData != null) {
+                logger.info("Retrieved patient data from cache for ID: {}", id);
+                return ResponseEntity.ok()
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body(cachedPatientData);
+            }
+
             // Make GET request to IPFS endpoint
-            ResponseEntity<String> responseEntity = restTemplate.exchange(IpfsUrl + "file/" + id, HttpMethod.GET, null, String.class);
+            ResponseEntity<String> responseEntity = restTemplate.getForEntity(IpfsUrl + "file/" + id, String.class);
             String patientData = responseEntity.getBody();
 
-            // Save patient data to file
-//            String filename = "patient_" + id + ".json";
-            Path filePath = Paths.get("C:", "Users", "Youcode", "Downloads", id + ".json");
-            Files.write(filePath, patientData.getBytes());
+            // Cache the patient data
+            patientCache.put(id, patientData);
+            logger.info("Downloaded patient data successfully for ID: {}", id);
 
-            logger.info("Downloaded patient data successfully. File saved at: {}", filePath);
-
-            return responseEntity;
+            return ResponseEntity.ok()
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(patientData);
         } catch (RestClientException e) {
             logger.error("Error downloading patient data from IPFS: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error downloading patient data: " + e.getMessage());
         }
     }
 
+
+
     @Override
+//    public ResponseEntity<String> getPatientByEmail(String email) throws Exception {
+//        Person person = personRepository.findPersonByEmail(email);
+//        if (person != null) {
+//            ResponseEntity<InputStreamResource> responseEntity = getPatient(person.getHealthDataCID());
+//            if (responseEntity.getStatusCode() == HttpStatus.OK) {
+//                InputStreamResource inputStreamResource = responseEntity.getBody();
+//                // Convert InputStreamResource to String
+//                String patientData = convertInputStreamToString(inputStreamResource.getInputStream());
+//                return ResponseEntity.ok(patientData);
+//            } else {
+//                // Handle error response from getPatient method
+//                return ResponseEntity.status(responseEntity.getStatusCode()).body("Error retrieving patient data");
+//            }
+//        } else {
+//            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Patient not found");
+//        }
+//    }
     public ResponseEntity<String> getPatientByEmail(String email) throws Exception {
         Person person = personRepository.findPersonByEmail(email);
         if (person != null) {
-           return getPatient(person.getHealthDataCID());
-        }else{
+            ResponseEntity<String> responseEntity = getPatient(person.getHealthDataCID());
+            if (responseEntity.getStatusCode() == HttpStatus.OK) {
+                String patientData = responseEntity.getBody();
+                return ResponseEntity.ok(patientData);
+            } else {
+                // Handle error response from getPatient method
+                return ResponseEntity.status(responseEntity.getStatusCode()).body("Error retrieving patient data");
+            }
+        } else {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Patient not found");
         }
     }
+
+
 
 
     private String extractCidFromResponse(ResponseEntity<String> responseEntity) {
@@ -138,6 +217,19 @@ public class PatientServiceImpl implements PatientService {
         }
         return null; // CID not found in the response
     }
+
+
+
+    private String convertInputStreamToString(InputStream inputStream) throws IOException {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+        StringBuilder stringBuilder = new StringBuilder();
+        String line;
+        while ((line = reader.readLine()) != null) {
+            stringBuilder.append(line);
+        }
+        return stringBuilder.toString();
+    }
+
 
 
 }

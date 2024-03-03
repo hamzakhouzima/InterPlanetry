@@ -3,6 +3,8 @@ package com.youcode.interplanetary.HealthCareService.Controller;
 
 import com.youcode.interplanetary.Dto.PatientDto;
 import com.youcode.interplanetary.HealthCareService.Service.PatientService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -32,9 +34,12 @@ public class PatientController {
 
     @GetMapping(value = "/GetPatient/{id}")
     public ResponseEntity<?>  getPatient(@PathVariable String id) throws Exception {
+        Logger logger = LoggerFactory.getLogger(this.getClass());
         try{
+            logger.info("Get patient by id : " + id);
             return ResponseEntity.ok(patientService.getPatient(id));
         }catch(Exception e ){
+            logger.error(e.getMessage());
             return ResponseEntity.badRequest().body(e.getMessage());
     }
 }
