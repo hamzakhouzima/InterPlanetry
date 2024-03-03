@@ -1,6 +1,7 @@
 package com.youcode.interplanetary.HealthCareService.Controller;
 
 
+import com.youcode.interplanetary.Dto.EmailRequest;
 import com.youcode.interplanetary.Dto.PatientDto;
 import com.youcode.interplanetary.HealthCareService.Service.PatientService;
 import org.slf4j.Logger;
@@ -45,8 +46,11 @@ public class PatientController {
 }
 
 //TODO :this does not work currently we should solve it
-@PostMapping("/patient")
-public ResponseEntity<?> getPatientByEmail(@RequestBody String email) {
+@PostMapping("/patient/")
+public ResponseEntity<?> getPatientByEmail(@RequestBody EmailRequest emailRequest) {
+        Logger logger = LoggerFactory.getLogger(this.getClass());
+    String email = emailRequest.getEmail();
+    logger.info("this is the email your looking for ?? = "+email);
     try {
         // Validate email format
         if (!isValidEmail(email)) {
