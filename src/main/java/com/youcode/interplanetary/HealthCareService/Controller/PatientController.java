@@ -11,6 +11,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @RestController
 public class PatientController {
 
@@ -47,10 +50,11 @@ public class PatientController {
 
 //TODO :this does not work currently we should solve it
 @PostMapping("/patient/")
-public ResponseEntity<?> getPatientByEmail(@RequestBody EmailRequest emailRequest) {
-        Logger logger = LoggerFactory.getLogger(this.getClass());
+public ResponseEntity<Map<String, Object>> getPatientByEmail(@RequestBody EmailRequest emailRequest) {
+    Logger logger = LoggerFactory.getLogger(this.getClass());
     String email = emailRequest.getEmail();
-    logger.info("this is the email your looking for ?? = "+email);
+    logger.info("Received request for patient data with email: {}", email);
+
     try {
         // Validate email format
         if (!isValidEmail(email)) {
@@ -58,22 +62,31 @@ public ResponseEntity<?> getPatientByEmail(@RequestBody EmailRequest emailReques
         }
 
         // Call service method to retrieve patient data
-        ResponseEntity<String> response = patientService.getPatientByEmail(email);
+        ResponseEntity<Map<String, Object>> responseEntity = patientService.getPatientByEmail(email);
 
         // Check if patient data was found
-        if (response.getStatusCode().is2xxSuccessful()) {
-            return ResponseEntity.ok(response.getBody());
-        } else {
+        if (responseEntity.getStatusCode().is2xxSuccessful()) {
+            return ResponseEntity.ok(responseEntity.getBody());
+        } else if (responseEntity.getStatusCode().is4xxClientError()) {
             return ResponseEntity.notFound().build();
+        } else {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     } catch (IllegalArgumentException e) {
         // Handle invalid email format
-        return ResponseEntity.badRequest().body(e.getMessage());
+        logger.error("Invalid email format: {}", e.getMessage());
+        Map<String, Object> errorResponse = new HashMap<>();
+        errorResponse.put("error", e.getMessage());
+        return ResponseEntity.badRequest().body(errorResponse);
     } catch (Exception e) {
         // Handle other exceptions
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error retrieving patient data: " + e.getMessage());
+        logger.error("Error retrieving patient data: {}", e.getMessage(), e);
+        Map<String, Object> errorResponse = new HashMap<>();
+        errorResponse.put("error", "Error retrieving patient data");
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
     }
 }
+
 
     // Helper method to validate email format
     private boolean isValidEmail(String email) {
