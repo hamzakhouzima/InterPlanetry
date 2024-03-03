@@ -25,6 +25,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -97,7 +98,7 @@ public class PatientServiceImpl implements PatientService {
 
 
     @Override
-    public ResponseEntity<String> getPatient(String id) throws Exception {
+    public ResponseEntity<Map<String, Object>> getPatient(String id) throws Exception {
         Logger logger = LoggerFactory.getLogger(this.getClass());
 
         try {
@@ -105,9 +106,11 @@ public class PatientServiceImpl implements PatientService {
             String cachedPatientData = patientCache.get(id);
             if (cachedPatientData != null) {
                 logger.info("Retrieved patient data from cache for ID: {}", id);
+                Map<String, Object> responseData = new HashMap<>();
+                responseData.put("patientData", cachedPatientData);
                 return ResponseEntity.ok()
                         .contentType(MediaType.APPLICATION_JSON)
-                        .body(cachedPatientData);
+                        .body(responseData);
             }
 
             // Make GET request to IPFS endpoint
@@ -118,31 +121,41 @@ public class PatientServiceImpl implements PatientService {
             patientCache.put(id, patientData);
             logger.info("Downloaded patient data successfully for ID: {}", id);
 
+            Map<String, Object> responseData = new HashMap<>();
+            responseData.put("patientData", patientData);
             return ResponseEntity.ok()
                     .contentType(MediaType.APPLICATION_JSON)
-                    .body(patientData);
+                    .body(responseData);
         } catch (RestClientException e) {
             logger.error("Error downloading patient data from IPFS: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error downloading patient data: " + e.getMessage());
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("error", "Error downloading patient data");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(errorResponse);
         }
     }
 
-
-
     @Override
-    public ResponseEntity<String> getPatientByEmail(String email) throws Exception {
+    public ResponseEntity<Map<String, Object>> getPatientByEmail(String email) throws Exception {
         Person person = personRepository.findPersonByEmail(email);
         if (person != null) {
-            ResponseEntity<String> responseEntity = getPatient(person.getHealthDataCID());
-            if (responseEntity.getStatusCode() == HttpStatus.OK) {
-                String patientData = responseEntity.getBody();
-                return ResponseEntity.ok(patientData);
+            ResponseEntity<Map<String, Object>> responseEntity = getPatient(person.getHealthDataCID());
+            HttpStatus statusCode = (HttpStatus) responseEntity.getStatusCode();
+            if (statusCode == HttpStatus.OK) {
+                Map<String, Object> responseData = new HashMap<>();
+                responseData.put("patientData", responseEntity.getBody().get("patientData"));
+                return ResponseEntity.ok(responseData);
             } else {
                 // Handle error response from getPatient method
-                return ResponseEntity.status(responseEntity.getStatusCode()).body("Error retrieving patient data");
+                Map<String, Object> errorResponse = new HashMap<>();
+                errorResponse.put("error", "Error retrieving patient data");
+                return ResponseEntity.status(statusCode).body(errorResponse);
             }
         } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Patient not found");
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("error", "Patient not found");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
         }
     }
 
