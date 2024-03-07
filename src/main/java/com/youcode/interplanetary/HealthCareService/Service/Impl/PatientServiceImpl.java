@@ -158,8 +158,12 @@ public class PatientServiceImpl implements PatientService {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
         }
     }
-
-
+    //#####################################################////////////////// "###################
+    @Override
+    public ResponseEntity<String> updatePatient(String id, PatientDto personObject) throws Exception {
+        return null;
+    }
+//#####################################################////////////////// "###################
 
 
     private String extractCidFromResponse(ResponseEntity<String> responseEntity) {

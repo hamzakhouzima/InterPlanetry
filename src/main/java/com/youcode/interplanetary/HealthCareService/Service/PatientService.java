@@ -17,7 +17,10 @@ public interface PatientService {
 //    ResponseEntity<String> getPatient(String id) throws Exception ;
     ResponseEntity<Map<String, Object>> getPatient(String  id) throws Exception ;
     //    ResponseEntity<String> getPatientByEmail(String email) throws Exception;
-ResponseEntity<Map<String, Object>> getPatientByEmail(String email) throws Exception;
+    ResponseEntity<Map<String, Object>> getPatientByEmail(String email) throws Exception;
+
+    ResponseEntity<String> updatePatient(String id, PatientDto personObject) throws Exception;
+
 
 
 }
