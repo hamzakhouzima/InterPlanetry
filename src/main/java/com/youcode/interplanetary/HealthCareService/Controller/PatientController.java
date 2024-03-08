@@ -16,6 +16,7 @@ import java.util.Map;
 
 @RestController
 @CrossOrigin(origins = "*", allowedHeaders = "*")
+@RequestMapping("/api/interplanetary2")
 public class PatientController {
 
     @Autowired

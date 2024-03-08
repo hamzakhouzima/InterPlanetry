@@ -14,3 +14,5 @@ EXPOSE 8080
 
 # Set the default command to run when the container starts
 CMD ["ipfs", "daemon"]
+
+#TODO : get the ipfs node image from docker hub and intergrate it in the dockerfile of the doctor service
