@@ -53,7 +53,7 @@ public class PatientServiceImpl implements PatientService {
         this.fc = fc;
         this.pm = pm;
     }
-    @Value("${ipfs.api.endpoint}")
+    @Value("${ipfs.api.endpoint}api/NetworkStorage")
     private String IpfsUrl;
 
 
@@ -75,7 +75,7 @@ public class PatientServiceImpl implements PatientService {
             String patientJson = convertPatientDtoToJson(patientDto);
             headers.setContentType(MediaType.APPLICATION_JSON);
             HttpEntity<String> requestEntity = new HttpEntity<>(patientJson, headers);
-            ResponseEntity<String> responseEntity = restTemplate.exchange(IpfsUrl + "upload", HttpMethod.POST, requestEntity, String.class);
+            ResponseEntity<String> responseEntity = restTemplate.exchange(IpfsUrl + "/upload", HttpMethod.POST, requestEntity, String.class);
             logger.info("Uploaded patient data successfully. Response: {}", responseEntity.getBody());
 //            person.setCity(patientDto.getCity());
             person.setAge(patientDto.getDemographics().getAge());
