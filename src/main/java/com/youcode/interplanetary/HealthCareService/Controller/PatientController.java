@@ -90,6 +90,19 @@ public ResponseEntity<Map<String, Object>> getPatientByEmail(@RequestBody EmailR
 }
 
 
+
+    @PutMapping(value = "/UpdatePatient/{id}")
+    public ResponseEntity<String> updatePatient(@PathVariable(required = false , value = "id") String id, @RequestBody PatientDto personObject, @RequestBody(required = false) String email) throws Exception {
+        try {
+            patientService.updatePatient(id , personObject , email);
+            return ResponseEntity.ok("Patient updated successfully.");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+
+    }
+
+
     // Helper method to validate email format
     private boolean isValidEmail(String email) {
         // Implement email validation logic here

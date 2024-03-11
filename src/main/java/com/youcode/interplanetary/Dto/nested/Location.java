@@ -7,7 +7,6 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 @Data
 @Component
-
 public  class Location {
     private String country;
     private String region;

@@ -1,7 +1,7 @@
 package com.youcode.interplanetary.HealthCareService.Service.Impl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.youcode.interplanetary.Dto.PatientDto;
 import com.youcode.interplanetary.GlobalConverters.FormatConverter;
@@ -15,19 +15,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.InputStreamResource;
+
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
-import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 
@@ -101,20 +97,37 @@ public class PatientServiceImpl implements PatientService {
     public ResponseEntity<Map<String, Object>> getPatient(String id) throws Exception {
         Logger logger = LoggerFactory.getLogger(this.getClass());
 
+        String formattedJson = "";
         try {
             // Check if the patient data is already cached
             String cachedPatientData = patientCache.get(id);
-            if (cachedPatientData != null) {
-                logger.info("Retrieved patient data from cache for ID: {}", id);
-                Map<String, Object> responseData = new HashMap<>();
-                responseData.put("patientData", cachedPatientData);
-                return ResponseEntity.ok()
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .body(responseData);
+
+//            ObjectMapper mapper = new ObjectMapper();
+            if (cachedPatientData != null && !cachedPatientData.isEmpty()) {
+                // Create an instance of ObjectMapper
+                ObjectMapper mapper = new ObjectMapper();
+
+                try {
+                    // Convert the JSON string to a JSON object
+                    Object json = mapper.readValue(cachedPatientData, Object.class);
+
+                    // Convert the JSON object to a well-formatted JSON string with 2-space indentation
+                     formattedJson = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(json);
+
+                    // Output the well-formatted JSON string
+                    System.out.println(formattedJson);
+                } catch (Exception e) {
+                    // Handle any exceptions
+                    e.printStackTrace();
+                }
+            } else {
+                System.out.println("Cached patient data is null or empty.");
             }
 
+
+
             // Make GET request to IPFS endpoint
-            ResponseEntity<String> responseEntity = restTemplate.getForEntity(IpfsUrl + "file/" + id, String.class);
+            ResponseEntity<String> responseEntity = restTemplate.getForEntity(IpfsUrl + "/file/" + id, String.class);
             String patientData = responseEntity.getBody();
 
             // Cache the patient data
@@ -122,9 +135,9 @@ public class PatientServiceImpl implements PatientService {
             logger.info("Downloaded patient data successfully for ID: {}", id);
 
             Map<String, Object> responseData = new HashMap<>();
-            responseData.put("patientData", patientData);
+            responseData.put("patientData", formattedJson);
             return ResponseEntity.ok()
-                    .contentType(MediaType.APPLICATION_JSON)
+//                    .contentType(MediaType.APPLICATION_JSON)
                     .body(responseData);
         } catch (RestClientException e) {
             logger.error("Error downloading patient data from IPFS: {}", e.getMessage(), e);
@@ -144,6 +157,7 @@ public class PatientServiceImpl implements PatientService {
             HttpStatus statusCode = (HttpStatus) responseEntity.getStatusCode();
             if (statusCode == HttpStatus.OK) {
                 Map<String, Object> responseData = new HashMap<>();
+
                 responseData.put("patientData", responseEntity.getBody().get("patientData"));
                 return ResponseEntity.ok(responseData);
             } else {
@@ -158,12 +172,120 @@ public class PatientServiceImpl implements PatientService {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
         }
     }
-    //#####################################################////////////////// "###################
+  //////##########################################################  //#####################################################////////////////// "###################
     @Override
-    public ResponseEntity<String> updatePatient(String id, PatientDto personObject) throws Exception {
-        return null;
+    public void updatePatient(String id, PatientDto personObject, String email) {
+        Logger logger = LoggerFactory.getLogger(this.getClass());
+
+        try {
+            // Fetch the existing patient data from IPFS
+            ResponseEntity<byte[]> responseEntity = restTemplate.exchange(IpfsUrl + "/file/" + id, HttpMethod.GET, null, byte[].class);
+            byte[] patientData = responseEntity.getBody();
+
+            // Convert byte array to JSON string
+            assert patientData != null;
+            String jsonPatientData = new String(patientData);
+
+            // Parse the JSON string to a Map for easy manipulation
+            ObjectMapper mapper = new ObjectMapper();
+            Map<String, Object> patientMap = mapper.readValue(jsonPatientData, new TypeReference<Map<String, Object>>(){});
+
+            // Update the fields in the patient object based on the provided DTO
+            updateDemographics(personObject, patientMap);
+            updateMedicalHistory(personObject, patientMap);
+            updateContactInformation(personObject, patientMap);
+
+            // Convert the updated patient map back to JSON string
+            String updatedJsonPatientData = mapper.writeValueAsString(patientMap);
+
+            ObjectMapper objectMapper = new ObjectMapper();
+            PatientDto patientDTO = objectMapper.readValue(updatedJsonPatientData, PatientDto.class);
+
+            // Save the updated patient data back to IPFS
+            String newPatientCid = String.valueOf(savePatient(patientDTO));
+            personRepository.updateCID(id, newPatientCid);
+            logger.info("Patient data updated successfully for ID: {}", id);
+        } catch (IOException | RestClientException e) {
+            logger.error("Error updating patient data from IPFS: {}", e.getMessage(), e);
+        }
     }
-//#####################################################////////////////// "###################
+
+    private void updateDemographics(PatientDto personObject, Map<String, Object> patientMap) {
+        if (personObject.getDemographics() != null) {
+            Map<String, Object> demographicsMap = (Map<String, Object>) patientMap.get("demographics");
+            if (personObject.getDemographics().getAge() != 0) {
+                demographicsMap.put("age", personObject.getDemographics().getAge());
+            }
+            if (personObject.getDemographics().getGender() != null) {
+                demographicsMap.put("gender", personObject.getDemographics().getGender());
+            }
+            if (personObject.getDemographics().getEthnicity() != null) {
+                demographicsMap.put("ethnicity", personObject.getDemographics().getEthnicity());
+            }
+            if (personObject.getDemographics().getLocation() != null) {
+                Map<String, String> locationMap = (Map<String, String>) demographicsMap.get("location");
+                if (locationMap == null) {
+                    locationMap = new HashMap<>();
+                    demographicsMap.put("location", locationMap);
+                }
+                if (personObject.getDemographics().getLocation().getCountry() != null) {
+                    locationMap.put("country", personObject.getDemographics().getLocation().getCountry());
+                }
+                if (personObject.getDemographics().getLocation().getRegion() != null) {
+                    locationMap.put("region", personObject.getDemographics().getLocation().getRegion());
+                }
+            }
+        }
+    }
+
+    private void updateMedicalHistory(PatientDto personObject, Map<String, Object> patientMap) {
+        if (personObject.getMedicalHistory() != null) {
+            Map<String, Object> medicalHistoryMap = (Map<String, Object>) patientMap.get("medicalHistory");
+            if (personObject.getMedicalHistory().isFamilyHistoryHeartDisease()) {
+                medicalHistoryMap.put("familyHistoryHeartDisease", true);
+            }
+            if (personObject.getMedicalHistory().getExistingConditions() != null) {
+                medicalHistoryMap.put("existingConditions", personObject.getMedicalHistory().getExistingConditions());
+            }
+        }
+    }
+
+    private void updateContactInformation(PatientDto personObject, Map<String, Object> patientMap) {
+        if (personObject.getContactInformation() != null) {
+            Map<String, Object> contactInformationMap = (Map<String, Object>) patientMap.get("contactInformation");
+            if (personObject.getContactInformation().getFirst_name() != null) {
+                contactInformationMap.put("firstName", personObject.getContactInformation().getFirst_name());
+            }
+            if (personObject.getContactInformation().getLast_name() != null) {
+                contactInformationMap.put("lastName", personObject.getContactInformation().getLast_name());
+            }
+            if (personObject.getContactInformation().getPrimaryPhone() != null) {
+                contactInformationMap.put("primaryPhone", personObject.getContactInformation().getPrimaryPhone());
+            }
+            if (personObject.getContactInformation().getEmail() != null) {
+                contactInformationMap.put("email", personObject.getContactInformation().getEmail());
+            }
+            if (personObject.getContactInformation().getEmergencyContact() != null) {
+                Map<String, String> emergencyContactMap = (Map<String, String>) contactInformationMap.get("emergencyContact");
+                if (emergencyContactMap == null) {
+                    emergencyContactMap = new HashMap<>();
+                    contactInformationMap.put("emergencyContact", emergencyContactMap);
+                }
+                if (personObject.getContactInformation().getEmergencyContact().getName() != null) {
+                    emergencyContactMap.put("name", personObject.getContactInformation().getEmergencyContact().getName());
+                }
+                if (personObject.getContactInformation().getEmergencyContact().getPhone() != null) {
+                    emergencyContactMap.put("phone", personObject.getContactInformation().getEmergencyContact().getPhone());
+                }
+                if (personObject.getContactInformation().getEmergencyContact().getRelationship() != null) {
+                    emergencyContactMap.put("relationship", personObject.getContactInformation().getEmergencyContact().getRelationship());
+                }
+            }
+        }
+    }
+
+
+//////##########################################################  //#####################################################////////////////// "###################
 
 
     private String extractCidFromResponse(ResponseEntity<String> responseEntity) {
@@ -185,15 +307,40 @@ public class PatientServiceImpl implements PatientService {
 
 
 
-    private String convertInputStreamToString(InputStream inputStream) throws IOException {
-        BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-        StringBuilder stringBuilder = new StringBuilder();
-        String line;
-        while ((line = reader.readLine()) != null) {
-            stringBuilder.append(line);
-        }
-        return stringBuilder.toString();
-    }
+//    private String convertInputStreamToString(InputStream inputStream) throws IOException {
+//        BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+//        StringBuilder stringBuilder = new StringBuilder();
+//        String line;
+//        while ((line = reader.readLine()) != null) {
+//            stringBuilder.append(line);
+//        }
+//        return stringBuilder.toString();
+//    }
+
+
+
+
+
+
+
+
+//private String convertToJsonString(String  object) {
+//    ObjectMapper mapper = new ObjectMapper();
+//
+//    try {
+//        // Parse the JSON string into a JSON object
+//        Object json = mapper.readValue(jsonString, Object.class);
+//
+//        // Convert the JSON object back to a formatted JSON string
+//        String formattedJsonString = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(json);
+//
+//        // Now, formattedJsonString contains the formatted JSON string
+//        System.out.println(formattedJsonString);
+//    } catch (Exception e) {
+//        e.printStackTrace();
+//    }
+//}
+
 
 
 
