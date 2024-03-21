@@ -1,5 +1,6 @@
-package com.youcode.interplanetary.Dto;
+package com.youcode.interplanetary.Dto.UserDto;
 
+import com.youcode.interplanetary.Dto.*;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
@@ -20,6 +21,8 @@ public class PatientDto {
     private HeartData heartData;
     private Lifestyle lifestyle;
     private ContactInformation contactInformation;
+
+    private String CIN;
 
 
 //    private Long timestamp;

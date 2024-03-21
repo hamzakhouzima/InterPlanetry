@@ -2,7 +2,7 @@ package com.youcode.interplanetary.HealthCareService.Controller;
 
 
 import com.youcode.interplanetary.Dto.EmailRequest;
-import com.youcode.interplanetary.Dto.PatientDto;
+import com.youcode.interplanetary.Dto.UserDto.PatientDto;
 import com.youcode.interplanetary.HealthCareService.Service.PatientService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -69,7 +69,8 @@ public ResponseEntity<Map<String, Object>> getPatientByEmail(@RequestBody EmailR
         // Check if patient data was found
         if (responseEntity.getStatusCode().is2xxSuccessful()) {
             return ResponseEntity.ok(responseEntity.getBody());
-        } else if (responseEntity.getStatusCode().is4xxClientError()) {
+        }
+        else if (responseEntity.getStatusCode().is4xxClientError()) {
             return ResponseEntity.notFound().build();
         } else {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
@@ -91,6 +92,8 @@ public ResponseEntity<Map<String, Object>> getPatientByEmail(@RequestBody EmailR
 
 
 
+
+
     @PutMapping(value = "/UpdatePatient/{id}")
     public ResponseEntity<String> updatePatient(@PathVariable(required = false , value = "id") String id, @RequestBody PatientDto personObject, @RequestBody(required = false) String email) throws Exception {
         try {
@@ -105,8 +108,10 @@ public ResponseEntity<Map<String, Object>> getPatientByEmail(@RequestBody EmailR
 
     // Helper method to validate email format
     private boolean isValidEmail(String email) {
-        // Implement email validation logic here
-        return true;
+        // Implement your email validation logic
+
+
+    return true;
     }
 
 

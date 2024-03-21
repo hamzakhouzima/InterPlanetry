@@ -1,6 +1,6 @@
-package com.youcode.interplanetary.GlobalConverters;
+package com.youcode.interplanetary.GlobalConverters.mappers;
 
-import com.youcode.interplanetary.Dto.PatientDto;
+import com.youcode.interplanetary.Dto.UserDto.PatientDto;
 import com.youcode.interplanetary.HealthCareService.Entity.Person;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;

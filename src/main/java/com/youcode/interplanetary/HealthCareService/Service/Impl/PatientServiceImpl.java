@@ -3,9 +3,9 @@ package com.youcode.interplanetary.HealthCareService.Service.Impl;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.youcode.interplanetary.Dto.PatientDto;
+import com.youcode.interplanetary.Dto.UserDto.PatientDto;
 import com.youcode.interplanetary.GlobalConverters.FormatConverter;
-import com.youcode.interplanetary.GlobalConverters.PatientMapper;
+import com.youcode.interplanetary.GlobalConverters.mappers.PatientMapper;
 import com.youcode.interplanetary.GlobalException.IPFSException;
 import com.youcode.interplanetary.HealthCareService.Entity.Person;
 import com.youcode.interplanetary.HealthCareService.Repository.PersonRepository;
@@ -80,6 +80,7 @@ public class PatientServiceImpl implements PatientService {
             person.setHealthDataCID(extractCidFromResponse(responseEntity));
             person.setEmail(patientDto.getContactInformation().getEmail());
             person.setCountry(String.valueOf(patientDto.getDemographics().getLocation().getCountry()));
+            person.setCIN(patientDto.getCIN());
 //this part where i should convert the data from the patientDto , to the entity so i can store the metadata
             personRepository.save(person);
             return responseEntity;
@@ -126,11 +127,11 @@ public class PatientServiceImpl implements PatientService {
 
 
 
-            // Make GET request to IPFS endpoint
+            // make GET request to IPFS endpoint
             ResponseEntity<String> responseEntity = restTemplate.getForEntity(IpfsUrl + "/file/" + id, String.class);
             String patientData = responseEntity.getBody();
 
-            // Cache the patient data
+            // cache the patient data
             patientCache.put(id, patientData);
             logger.info("Downloaded patient data successfully for ID: {}", id);
 
@@ -172,39 +173,45 @@ public class PatientServiceImpl implements PatientService {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
         }
     }
-  //////##########################################################  //#####################################################////////////////// "###################
+  //////##########################################################//#####################################################////////////////// "###################
     @Override
+//    @Transactional
     public void updatePatient(String id, PatientDto personObject, String email) {
         Logger logger = LoggerFactory.getLogger(this.getClass());
 
         try {
-            // Fetch the existing patient data from IPFS
+            // fetch the existing patient data from IPFS
             ResponseEntity<byte[]> responseEntity = restTemplate.exchange(IpfsUrl + "/file/" + id, HttpMethod.GET, null, byte[].class);
             byte[] patientData = responseEntity.getBody();
 
-            // Convert byte array to JSON string
+            // convert byte array to JSON string
             assert patientData != null;
             String jsonPatientData = new String(patientData);
 
-            // Parse the JSON string to a Map for easy manipulation
+            // parse the JSON string to a Map for easy manipulation
             ObjectMapper mapper = new ObjectMapper();
             Map<String, Object> patientMap = mapper.readValue(jsonPatientData, new TypeReference<Map<String, Object>>(){});
 
-            // Update the fields in the patient object based on the provided DTO
+            // update the fields in the patient object based on the provided DTO
             updateDemographics(personObject, patientMap);
             updateMedicalHistory(personObject, patientMap);
             updateContactInformation(personObject, patientMap);
 
-            // Convert the updated patient map back to JSON string
+            // convert the updated patient map back to JSON string
             String updatedJsonPatientData = mapper.writeValueAsString(patientMap);
 
             ObjectMapper objectMapper = new ObjectMapper();
             PatientDto patientDTO = objectMapper.readValue(updatedJsonPatientData, PatientDto.class);
 
-            // Save the updated patient data back to IPFS
+            // save the updated patient data back to IPFS
             String newPatientCid = String.valueOf(savePatient(patientDTO));
-            personRepository.updateCID(id, newPatientCid);
-            logger.info("Patient data updated successfully for ID: {}", id);
+            try{
+                personRepository.updateCID(id, newPatientCid);
+                logger.info("Patient data updated successfully for ID: {}", id);
+
+            }catch(Exception e){
+                e.printStackTrace();
+            }
         } catch (IOException | RestClientException e) {
             logger.error("Error updating patient data from IPFS: {}", e.getMessage(), e);
         }

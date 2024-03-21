@@ -16,8 +16,12 @@ import lombok.RequiredArgsConstructor;
 public class Person {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    @Column(name = "patient_id", nullable = false)
-    private Long patientId;
+//    @Column(name = "id", nullable = false)
+    private Long id;
+//    @Id
+//    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "person_seq")
+//    @SequenceGenerator(name = "person_seq", sequenceName = "Person_SEQ", allocationSize = 1)
+//    private Long id;
 
     private String name;
     private int age;
@@ -29,6 +33,10 @@ public class Person {
     private String city;
     private String country;
     private String zipcode;
+
+
+    private String CIN;
+
 
 
 

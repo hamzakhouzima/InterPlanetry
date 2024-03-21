@@ -1,6 +1,6 @@
 package com.youcode.interplanetary.HealthCareService.Service;
 
-import com.youcode.interplanetary.Dto.PatientDto;
+import com.youcode.interplanetary.Dto.UserDto.PatientDto;
 import org.springframework.http.ResponseEntity;
 
 import java.util.Map;
