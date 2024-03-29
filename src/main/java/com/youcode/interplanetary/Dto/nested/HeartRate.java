@@ -10,4 +10,9 @@ import org.springframework.stereotype.Component;
 public  class HeartRate {
     private int resting;
     private int exercise;
+
+    public HeartRate(int i, int i1) {
+        this.resting = i;
+        this.exercise = i1;
+    }
 }

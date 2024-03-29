@@ -13,10 +13,11 @@ import lombok.RequiredArgsConstructor;
 @Data
 @RequiredArgsConstructor
 @Entity
+@Table(uniqueConstraints={@UniqueConstraint(columnNames = {"email"})})
+
 public class Person {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-//    @Column(name = "id", nullable = false)
     private Long id;
 //    @Id
 //    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "person_seq")
@@ -27,7 +28,10 @@ public class Person {
     private int age;
     private String gender;
     private String healthDataCID;
+
+//    @Column(unique = true);
     private String email;
+//TODO : check this Bug so the email can be unique
     private String phone;
     private String street;
     private String city;

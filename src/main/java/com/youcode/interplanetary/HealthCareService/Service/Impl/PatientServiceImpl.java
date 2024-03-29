@@ -3,6 +3,7 @@ package com.youcode.interplanetary.HealthCareService.Service.Impl;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.youcode.interplanetary.Dto.ContactInformation;
 import com.youcode.interplanetary.Dto.UserDto.PatientDto;
 import com.youcode.interplanetary.GlobalConverters.FormatConverter;
 import com.youcode.interplanetary.GlobalConverters.mappers.PatientMapper;
@@ -38,16 +39,16 @@ public class PatientServiceImpl implements PatientService {
     private final FormatConverter fc;
    private final HttpHeaders headers = new HttpHeaders();
 
-    @Autowired
     private PersonRepository personRepository;
 
     private final PatientMapper pm;
 
 
-    public PatientServiceImpl(RestTemplate restTemplate , FormatConverter fc, PatientMapper pm) {
+    public PatientServiceImpl(RestTemplate restTemplate , FormatConverter fc, PatientMapper pm , PersonRepository personRepository) {
         this.restTemplate = restTemplate;
         this.fc = fc;
         this.pm = pm;
+        this.personRepository = personRepository;
     }
     @Value("${ipfs.api.endpoint}api/NetworkStorage")
     private String IpfsUrl;
@@ -67,6 +68,25 @@ public class PatientServiceImpl implements PatientService {
         Logger logger = LoggerFactory.getLogger(this.getClass());
         Person person = new Person();
         try {
+
+
+            if (patientDto == null || patientDto.getDemographics() == null || patientDto.getContactInformation() == null) {
+                throw new IllegalArgumentException("Invalid patientDto: It cannot be null and must contain demographics and contact information.");
+            }
+
+            // Check specific fields for null values
+            if (patientDto.getDemographics().getAge() == 0 || patientDto.getDemographics().getGender() == null ||
+                    patientDto.getContactInformation().getEmail() == null) {
+                throw new IllegalArgumentException("Invalid patientDto: Demographics age/gender and contact email cannot be null.");
+            }
+            ContactInformation contactInformation = patientDto.getContactInformation();
+            if (contactInformation == null) {
+                throw new IllegalArgumentException("Invalid patientDto: Contact information cannot be null.");
+            }
+            if (contactInformation.getEmail() == null) {
+                throw new IllegalArgumentException("Invalid patientDto: Contact email cannot be null.");
+            }
+
 //            String apiUrl = "http://localhost:8082/upload";
             String patientJson = convertPatientDtoToJson(patientDto);
             headers.setContentType(MediaType.APPLICATION_JSON);
@@ -124,9 +144,6 @@ public class PatientServiceImpl implements PatientService {
             } else {
                 System.out.println("Cached patient data is null or empty.");
             }
-
-
-
             // make GET request to IPFS endpoint
             ResponseEntity<String> responseEntity = restTemplate.getForEntity(IpfsUrl + "/file/" + id, String.class);
             String patientData = responseEntity.getBody();
@@ -138,7 +155,8 @@ public class PatientServiceImpl implements PatientService {
             Map<String, Object> responseData = new HashMap<>();
             responseData.put("patientData", formattedJson);
             return ResponseEntity.ok()
-//                    .contentType(MediaType.APPLICATION_JSON)
+                    //this was commented , it could be an issue hhhhhh
+                    .contentType(MediaType.APPLICATION_JSON)
                     .body(responseData);
         } catch (RestClientException e) {
             logger.error("Error downloading patient data from IPFS: {}", e.getMessage(), e);
@@ -299,7 +317,7 @@ public class PatientServiceImpl implements PatientService {
         String body = responseEntity.getBody();
         System.out.println("Response body: " + body);
 
-        // Assuming the response body is in the format {"cid": "YOUR_CID_HERE"}
+        //  the response body is in the format {"cid": "CID"}
         String cidPrefix = "\"cid\": \"";
         int startIndex = body.indexOf(cidPrefix);
         if (startIndex != -1) {

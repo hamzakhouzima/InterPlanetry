@@ -11,4 +11,10 @@ public  class Electrolytes {
     private double potassium;
     private double sodium;
     private double chloride;
+
+    public Electrolytes(double v, int i, int i1) {
+        this.potassium = v;
+        this.sodium = i;
+        this.chloride = i1;
+    }
 }

@@ -11,8 +11,10 @@ import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
+
 @Data
 public class VitalSigns {
+
     private BloodPressure bloodPressure;
     private HeartRate heartRate;
     private int respiratoryRate;

@@ -10,4 +10,10 @@ import org.springframework.stereotype.Component;
 public  class BloodPressure {
     private int systolic;
     private int diastolic;
+
+    public BloodPressure(int i, int i1) {
+        this.systolic = i;
+        this.diastolic = i1;
+
+    }
 }
